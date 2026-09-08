@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String           @id @default(cuid())
+  email            String           @unique
+  password         String
+  role             String
+  name             String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  juniorProfile    JuniorProfile?
+  startupProfile   StartupProfile?
+  sentContacts     Contact[]        @relation("sentContacts")
+  receivedContacts Contact[]        @relation("receivedContacts")
+}
+
+model JuniorProfile {
+  id                  String         @id @default(cuid())
+  userId              String         @unique
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName           String
+  lastName            String
+  city                String
+  phone               String?
+  title               String
+  availability        String
+  about               String
+  whatCanIBring       String
+  whyStartup          String
+  desiredOpportunity  String
+  cvUrl               String?
+  profilePicture      String?
+  isVerified          Boolean        @default(false)
+  profileComplete     Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  education           Education[]
+  skills              Skill[]
+  experience          Experience[]
+  projects            Project[]
+  certifications      Certification[]
+  languages           Language[]
+  applications        Application[]
+}
+
+model StartupProfile {
+  id                  String         @id @default(cuid())
+  userId              String         @unique
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName         String
+  sector              String
+  city                String
+  description         String
+  website             String?
+  yearFounded         Int?
+  teamSize            String?
+  logo                String?
+  isVerified          Boolean        @default(false)
+  profileComplete     Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  opportunities       Opportunity[]
+  needs               Need[]
+}
+
+model Education {
+  id                  String         @id @default(cuid())
+  juniorProfileId     String
+  juniorProfile       JuniorProfile  @relation(fields: [juniorProfileId], references: [id], onDelete: Cascade)
+  school              String
+  degree              String
+  field               String?
+  startYear           Int
+  endYear             Int?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Skill {
+  id                  String         @id @default(cuid())
+  juniorProfileId     String
+  juniorProfile       JuniorProfile  @relation(fields: [juniorProfileId], references: [id], onDelete: Cascade)
+  name                String
+  level               String?
+  createdAt           DateTime       @default(now())
+}
+
+model Experience {
+  id                  String         @id @default(cuid())
+  juniorProfileId     String
+  juniorProfile       JuniorProfile  @relation(fields: [juniorProfileId], references: [id], onDelete: Cascade)
+  company             String
+  position            String
+  startDate           DateTime
+  endDate             DateTime?
+  description         String?
+  current             Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Project {
+  id                  String         @id @default(cuid())
+  juniorProfileId     String
+  juniorProfile       JuniorProfile  @relation(fields: [juniorProfileId], references: [id], onDelete: Cascade)
+  name                String
+  description         String
+  technologies        String
+  url                 String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Certification {
+  id                  String         @id @default(cuid())
+  juniorProfileId     String
+  juniorProfile       JuniorProfile  @relation(fields: [juniorProfileId], references: [id], onDelete: Cascade)
+  name                String
+  issuer              String
+  year                Int
+  url                 String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Language {
+  id                  String         @id @default(cuid())
+  juniorProfileId     String
+  juniorProfile       JuniorProfile  @relation(fields: [juniorProfileId], references: [id], onDelete: Cascade)
+  name                String
+  level               String
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Opportunity {
+  id                  String         @id @default(cuid())
+  startupProfileId    String
+  title               String
+  type                String
+  location            String
+  remote              Boolean        @default(false)
+  requiredSkills      String
+  description         String
+  idealProfile        String
+  applicationDeadline DateTime?
+  isActive            Boolean        @default(true)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  startupProfile      StartupProfile  @relation(fields: [startupProfileId], references: [id], onDelete: Cascade)
+  applications        Application[]
+}
+
+model Application {
+  id                  String         @id @default(cuid())
+  juniorProfileId     String
+  opportunityId       String
+  status              String
+  message             String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  juniorProfile       JuniorProfile  @relation(fields: [juniorProfileId], references: [id], onDelete: Cascade)
+  opportunity         Opportunity    @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([juniorProfileId, opportunityId])
+}
+
+model Need {
+  id                  String         @id @default(cuid())
+  startupProfileId    String
+  startupProfile      StartupProfile  @relation(fields: [startupProfileId], references: [id], onDelete: Cascade)
+  skillName           String
+  createdAt           DateTime       @default(now())
+}
+
+model Contact {
+  id                  String         @id @default(cuid())
+  senderId            String
+  receiverId          String
+  message             String
+  isRead              Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+
+  sender              User           @relation("sentContacts", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver            User           @relation("receivedContacts", fields: [receiverId], references: [id], onDelete: Cascade)
+}
